@@ -1,0 +1,51 @@
+#!/usr/bin/env ruby
+
+require 'rubygems'
+require 'pit'
+require 'terminal-notifier'
+require 'pp'
+require 'net/https'
+require 'json'
+
+class ChatWork
+  class TerminalNotifier
+    attr_accessor :token
+
+    def initialize(config)
+      @token = config['token']
+    end
+
+    def get_rooms
+      uri  = URI('https://api.chatwork.com/v1/rooms')
+      http = Net::HTTP.new(uri.host, uri.port)
+      http.use_ssl = true
+      http.verify_mode = OpenSSL::SSL::VERIFY_NONE
+
+      res = http.get(uri.request_uri, { "X-ChatWorkToken" => self.token })
+      JSON.parse(res.body)
+    end
+
+    def run
+      while true do
+        ::TerminalNotifier.execute(false, { remove: 'ALL', group: self.class.name });
+        self.get_rooms.each {|room|
+          if room['unread_num'] > 0
+            ::TerminalNotifier.notify("#{room['name']} (#{room['unread_num']})", title: self.class.name, group: self.class.name)
+          end
+        }
+        sleep(30);
+      end
+    end
+
+  end
+end
+
+config = Pit.get(
+  "chatwork-terminal-notifier",
+  require: {
+    "token" => "Your ChatWork token"
+  }
+)
+
+ChatWork::TerminalNotifier.new(config).run
+

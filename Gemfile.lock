@@ -1,0 +1,12 @@
+GEM
+  remote: https://rubygems.org/
+  specs:
+    pit (0.0.7)
+    terminal-notifier (1.5.1)
+
+PLATFORMS
+  ruby
+
+DEPENDENCIES
+  pit
+  terminal-notifier
